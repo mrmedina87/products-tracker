@@ -14,12 +14,12 @@
       switch ($this->method) {
         case 'GET':
           $query = "select * from products_description";
-          if($request[1] != "") {
-            $query = $query . " where products_description_id = " . $request[1];
+          if($request[2] != "") {
+            $query = $query . " where products_description_id = " . $request[2];
           } 
           $result = mysqli_query($link, $query);
           if($result) {
-            echo '{products_description:[';
+            echo '{"products_description":[';
             for ($i = 0; $i < mysqli_num_rows($result); $i++) {
               echo ($i>0?',':'').json_encode(mysqli_fetch_object($result));
             }
