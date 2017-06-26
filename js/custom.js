@@ -1,7 +1,10 @@
 const productsList = $("ul.products-list");
 const apiRestUrl = "http://products:8080/api";
 
-const buttonDelete = $("<button>Delete</button>");
+const buttonDelete = $('<button>Delete</button>');
+buttonDelete.addClass(["btn","btn-primary"]).attr("type","button").attr("data-toggle","modal").attr("data-target","#deleteConfirmation");
+
+const buttonDeleteModal = $('<button type="button" class="btn btn-primary">Yes</button>');
 
 function deleteProduct() {
   const prodId = this.products_id;
@@ -10,6 +13,7 @@ function deleteProduct() {
     url: apiRestUrl + "/product/" + prodId
   })
   .done(function(data) {
+    $('#deleteConfirmation').modal("hide");
     updateList();
   });
 }
@@ -26,9 +30,12 @@ function updateList() {
         .append($("<span class='prod-ref'>" + product.products_reference + "</span>"))
         .append($("<span class='prod-price'>" + product.products_price + "</span>"));
 
-      let deleteButton = buttonDelete.clone()
-        .click(deleteProduct.bind(product));
+      let deleteButton = buttonDelete.clone();
 
+      $("#yesDeleteButton").remove();
+      let yesDeleteModal = buttonDeleteModal.clone().attr("id", "yesDeleteButton");
+      yesDeleteModal.click(deleteProduct.bind(product));
+      $("#deleteConfirmation .modal-footer").append(yesDeleteModal);
       productElement.append(deleteButton);
       productsList.append(productElement);
     });
