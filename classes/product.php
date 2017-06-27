@@ -3,8 +3,13 @@
   include_once 'resource.php';
 
   class Product extends Resource {
+    private $default_language_id = 1;
     function __construct($method, $payload) {
       parent::__construct($method, $payload);
+    }
+
+    function __destruct() {
+      parent::__destruct();
     }
 
     private function checkDescriptions($descs) {
@@ -35,8 +40,6 @@
     }
 
     private function sendProduct() {
-      $link = mysqli_connect('localhost', 'root', '', 'dury');
-      mysqli_set_charset($link,'utf8');
       $isPut = $this->method === 'PUT';
       if($isPut) {
         $validPayload = is_array($this->payload) 
@@ -62,25 +65,27 @@
         if($validParams) {
           if($isPut) {
             $upsertProduct = "UPDATE `products` SET
-            `products_price` = $float_products_price, 
-            `products_reference`= '$products_reference'
-            WHERE `products_id` = $products_id";
+            `products_price` = ?, 
+            `products_reference`= ?
+            WHERE `products_id` = ?";
+            $stmt = $this->link->prepare($upsertProduct);
+            $stmt->bind_param("dsi", $float_products_price, $products_reference, $products_id);
           }
           else {
             $upsertProduct = "INSERT INTO `products` (
             `products_price`, 
             `products_reference`) 
-            VALUES (
-            $float_products_price, 
-            '$products_reference')";
+            VALUES (?,?)";
+            $stmt = $this->link->prepare($upsertProduct);
+            $stmt->bind_param("ds", $float_products_price, $products_reference);
           }
           
           if(array_key_exists("descriptions", $this->payload) && is_array($this->payload["descriptions"])) {
             $descs = $this->payload["descriptions"];
             if($this->checkDescriptions($descs)) {
-              if(mysqli_query($link, $upsertProduct)) {
+              if($stmt->execute()) {
                 if(!$isPut) {
-                  $products_id = $link->insert_id;
+                  $products_id = $this->link->insert_id;
                 }
                 $descrUpserted = true;
                 foreach ($descs as $desc) {
@@ -88,16 +93,26 @@
                   $products_description_name = $desc["products_description_name"];
                   $products_description_short_description = $desc["products_description_short_description"];
                   $products_description_description = $desc["products_description_description"];
-                  $isDescrUpdate = false;
                   if(array_key_exists("products_description_id", $desc)) {
                     $products_description_id = intval($desc["products_description_id"]);
                     $upsertDescription = "UPDATE `products_description` SET 
-                    `products_id` = $products_id,
-                    `languages_id` = $languages_id,
-                    `products_description_name` = '$products_description_name', 
-                    `products_description_short_description` = '$products_description_short_description', 
-                    `products_description_description` = '$products_description_description'
-                    WHERE `products_description_id` = $products_description_id";
+                      `products_id` = ?,
+                      `languages_id` = ?,
+                      `products_description_name` = ?, 
+                      `products_description_short_description` = ?, 
+                      `products_description_description` = ?
+                      WHERE `products_description_id` = ?";
+                    $stmt = $this->link->prepare($upsertDescription);
+                    if(!$stmt->bind_param("iisssi", 
+                      $products_id,
+                      $languages_id,
+                      $products_description_name,
+                      $products_description_short_description,
+                      $products_description_description,
+                      $products_description_id
+                    ) || !$stmt->execute()) {
+                      $descrUpserted = false;
+                    }
                   }
                   else {
                     $upsertDescription = "INSERT INTO `products_description` (
@@ -106,23 +121,18 @@
                     `products_description_name`, 
                     `products_description_short_description`, 
                     `products_description_description`) 
-                    VALUES (
-                    $products_id, 
-                    $languages_id, 
-                    '$products_description_name',
-                    '$products_description_short_description',
-                    '$products_description_description')";
-                    $deleteOldDescription = "DELETE FROM `products_description` WHERE `products_id` = $products_id AND `languages_id` = $languages_id";
-                    $resDelete = mysqli_query($link, $deleteOldDescription);
-                    if(!$resDelete) {
+                    VALUES (?, ?, ?,?,?)";                    
+                    $stmt = $this->link->prepare($upsertDescription);
+                    if(!$stmt->bind_param("iisss", 
+                      $products_id,
+                      $languages_id,
+                      $products_description_name,
+                      $products_description_short_description,
+                      $products_description_description
+                    ) || !$stmt->execute()) {
                       $descrUpserted = false;
                     }
                   } 
-                  
-                  $result = mysqli_query($link, $upsertDescription);
-                  if(!$result) {
-                    $descrUpserted = false;
-                  }
                 }
                 if($descrUpserted) {
                   if(!$isPut) {
@@ -161,24 +171,36 @@
         echo '{"errorMessage": "Not enough arguments"}';
         http_response_code(400);
       }
-      mysqli_close($link);
     }
 
     function processRequest($request) {
-      $link = mysqli_connect('localhost', 'root', '', 'dury');
-      mysqli_set_charset($link,'utf8');
-
       switch($this->method) {
         case "GET":
-          $query = "select * from products";
           if(isset($request[2])) {
-            $query = $query . " where products_id = " . $request[2];
+            $query = "select * from products where products_id = ?";
+            $stmt = $this->link->prepare($query);
+            $stmt->bind_param("i", $request[2]);
+            $stmt->execute();
+            $result = $stmt->get_result();
           } 
-          $result = mysqli_query($link, $query);
+          else {
+            $query = "SELECT products.products_id, 
+                            products.products_reference, 
+                            products.products_price,
+                            products_description.products_description_name
+                      FROM products
+                      INNER JOIN products_description 
+                      ON products.products_id=products_description.products_id 
+                      WHERE products_description.languages_id = ?";
+            $stmt = $this->link->prepare($query);
+            $stmt->bind_param("i", $this->default_language_id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+          }
           if($result) {
             echo '{"products":[';
-            for ($i = 0; $i < mysqli_num_rows($result); $i++) {
-              echo ($i>0?',':'').json_encode(mysqli_fetch_object($result));
+            for ($i = 0; $i < $result->num_rows; $i++) {
+              echo ($i>0?',':'').json_encode($result->fetch_object());
             }
             echo ']}';
           }
@@ -188,14 +210,15 @@
           break;
         case "DELETE":
           if($request[2] != "") {
-            $delete = "delete from products where products_id = " . $request[2];
-            $result = mysqli_query($link, $delete);
-            if($result) {
-              $delete = "delete from products_description where products_id = " . $request[2];
-              if(mysqli_query($link, $delete)) {
-                echo '{"delete": "ok"}';
+            $delete = "delete from products where products_id = ?";
+            $stmt = $this->link->prepare($delete);
+            if($stmt->bind_param("i", $request[2]) && $stmt->execute()) {
+              $delete = "delete from products_description where products_id = ?";
+              $stmt = $this->link->prepare($delete);
+              if($stmt->bind_param("i", $request[2]) && $stmt->execute()) {
+                echo '{"deleted": "true"}';
               }
-              else {
+              else{
                 http_response_code(400);
               }
             }
@@ -216,7 +239,6 @@
           break;
       }
 
-      mysqli_close($link);
     }   
   }
 ?>
