@@ -5,13 +5,17 @@ h2 {
   margin-top: 30px;
 }
 .header-products-list {
-  padding: 20px 12px;
+  padding: 12px 20px;
 }
 
-span.prod-ref, span.prod-price,
+span.prod-ref, span.prod-price, span.prod-default-name {
+    display: inline-block;
+    width: 25%;
+}
+
 .header-products-list > span {
     display: inline-block;
-    width: 30%;
+    width: 24%;
 }
 
 .product-row button {

@@ -7,17 +7,24 @@
       parent::__construct($method, $payload);
     }
     
-    function processRequest($request) {
-      $link = mysqli_connect('localhost', 'root', '', 'dury');
-      mysqli_set_charset($link,'utf8');
+    function __destruct() {
+      parent::__destruct();
+    }
 
+    function processRequest($request) {
       switch ($this->method) {
         case 'GET':
           $query = "select * from products_description";
-          if($request[2] != "") {
-            $query = $query . " where products_id = " . $request[2];
+          if(isset($request[2])) {
+            $query = $query . " where products_id = ?";
+            $stmt = $this->link->prepare($query);
+            $stmt->bind_param("i", $request[2]);
+            $stmt->execute();
+            $result = $stmt->get_result();
           } 
-          $result = mysqli_query($link, $query);
+          else {
+            $result = $this->link->query($query);
+          }
           if($result) {
             echo '{"products_description":[';
             for ($i = 0; $i < mysqli_num_rows($result); $i++) {
@@ -33,7 +40,6 @@
           http_response_code(404);
           break;
       }
-      mysqli_close($link);
     }
   }
 ?>

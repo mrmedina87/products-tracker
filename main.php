@@ -38,6 +38,7 @@ function showMain() {
           <div class="col col-sm-12">
             <h2>Product List</h2>
             <div class="header-products-list">
+              <span class="header-name">Name</span>
               <span class="header-reference">Reference</span>
               <span class="header-price">Price (Dkk)</span>
             </div>
@@ -127,7 +128,6 @@ function showMain() {
       <!-- Bootstrap 4 external dependecy -->
       <script type="text/javascript" src="https://npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
       <script type="text/javascript" src="js/bootstrap4.min.js"></script>
-      <!-- <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/1000hz-bootstrap-validator/0.11.9/validator.js"></script> -->
 
       <!-- Froala external js dependencies -->
       <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.25.0/codemirror.min.js"></script>
