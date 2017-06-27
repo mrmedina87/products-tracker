@@ -80,7 +80,7 @@
             if($this->checkDescriptions($descs)) {
               if(mysqli_query($link, $upsertProduct)) {
                 if(!$isPut) {
-                  $product_id = $link->insert_id;
+                  $products_id = $link->insert_id;
                 }
                 $descrUpserted = true;
                 foreach ($descs as $desc) {

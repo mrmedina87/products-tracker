@@ -36,12 +36,14 @@ function showMain() {
       <section class="container">
         <div class="row">
           <div class="col col-sm-12">
-            <h2>Products List</h2>
-            <span class"header-reference">Reference</span>
-            <span class"header-price">Price</span>
-            <ul class="products-list">
+            <h2>Product List</h2>
+            <div class="header-products-list">
+              <span class="header-reference">Reference</span>
+              <span class="header-price">Price (Dkk)</span>
+            </div>
+            <ul class="products-list list-group">
             </ul>
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#formProductModal" id="newprodbutton">New Product</button>
+            <button type="button" class="btn btn-success new-product" data-toggle="modal" data-target="#formProductModal" id="newprodbutton">New Product</button>
           </div>
         </div>
       </section>
@@ -93,12 +95,18 @@ function showMain() {
                 ?>
                 <fieldset class="form-group lang-box-wrapper" lang-id="<?php echo $lang->languages_id; ?>">
                   <legend><?php echo $lang->languages_name; ?></legend>
-                  <label for="name-product-<?php echo strtolower($lang->languages_name); ?>">Name</label>
-                  <input class="form-control" type="text" placeholder="Name" id="name-product-<?php echo strtolower($lang->languages_name); ?>" required>
-                  <label for="short-product-<?php echo strtolower($lang->languages_name); ?>">Short description</label>
-                  <textarea id="short-product-<?php echo strtolower($lang->languages_name); ?>" class="WYSIWYG-editor form-control" required></textarea>
-                  <label for="long-product-<?php echo strtolower($lang->languages_name); ?>">Long description</label>
-                  <textarea id="long-product-<?php echo strtolower($lang->languages_name); ?>" class="WYSIWYG-editor form-control" required></textarea>
+                  <div class="form-group">
+                    <label for="name-product-<?php echo strtolower($lang->languages_name); ?>">Name</label>
+                    <input class="form-control name-product" type="text" placeholder="Name" id="name-product-<?php echo strtolower($lang->languages_name); ?>" required>  
+                  </div>
+                  <div class="form-group">
+                    <label for="short-product-<?php echo strtolower($lang->languages_name); ?>">Short description</label>
+                    <textarea id="short-product-<?php echo strtolower($lang->languages_name); ?>" class="WYSIWYG-editor form-control short-desc" required></textarea>
+                  </div>
+                  <div class="form-group">
+                    <label for="long-product-<?php echo strtolower($lang->languages_name); ?>">Long description</label>
+                    <textarea id="long-product-<?php echo strtolower($lang->languages_name); ?>" class="WYSIWYG-editor form-control long-desc" required></textarea>
+                  </div>
                 </fieldset>
                 <?php
                 }

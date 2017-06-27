@@ -1,3 +1,31 @@
 a[href="https://www.froala.com/wysiwyg-editor?k=u"] {
     display: none !important;
 }
+h2 {
+  margin-top: 30px;
+}
+.header-products-list {
+  padding: 20px 12px;
+}
+
+span.prod-ref, span.prod-price,
+.header-products-list > span {
+    display: inline-block;
+    width: 30%;
+}
+
+.product-row button {
+  position: absolute;
+}
+
+.product-row .btn-delete {
+    right: 12px;
+}
+
+.product-row .btn-edit {
+    right: 100px;
+}
+
+.new-product {
+  margin-top: 20px;
+}

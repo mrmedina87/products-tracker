@@ -15,7 +15,7 @@
         case 'GET':
           $query = "select * from products_description";
           if($request[2] != "") {
-            $query = $query . " where products_description_id = " . $request[2];
+            $query = $query . " where products_id = " . $request[2];
           } 
           $result = mysqli_query($link, $query);
           if($result) {
