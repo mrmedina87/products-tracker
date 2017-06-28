@@ -191,7 +191,7 @@
                       FROM products
                       INNER JOIN products_description 
                       ON products.products_id=products_description.products_id 
-                      WHERE products_description.languages_id = ?";
+                      WHERE products_description.languages_id = ? ORDER BY products.products_id ASC";
             $stmt = $this->link->prepare($query);
             $stmt->bind_param("i", $this->default_language_id);
             $stmt->execute();
