@@ -1,42 +1,79 @@
-$(function() {
-  const productsList = $("ul.products-list");
-  const apiRestUrl = "http://products:8080/api";
-  const buttonDelete = $('<button>Delete</button>');
-  const buttonDeleteModal = $('<button type="button" class="btn btn-primary">Yes</button>');
-  const buttonEdit = $('<button>Edit</button>');
-  const buttonSaveModal = $('<button type="button" class="btn btn-primary">Save</button>');
+var prodManager = {
+  init: function() {
+    prodManager.config = {
+      productsList: $("ul.products-list"),
+      apiRestUrl: "http://products:8080/api",
+      buttonDelete: $('<button>Delete</button>'),
+      buttonDeleteModal: $('<button type="button" class="btn btn-primary">Yes</button>'),
+      buttonEdit: $('<button>Edit</button>'),
+      buttonSaveModal: $('<button type="button" class="btn btn-primary">Save</button>')
+    }
+    prodManager.config.buttonDelete.addClass("btn btn-secondary btn-delete").attr("type","button").attr("data-toggle","modal").attr("data-target","#deleteConfirmation");
+    prodManager.config.buttonEdit.addClass("btn btn-info btn-edit").attr("type","button").attr("data-toggle","modal").attr("data-target","#formProductModal");
+    prodManager.updateList();
 
-  buttonDelete.addClass("btn btn-secondary btn-delete").attr("type","button").attr("data-toggle","modal").attr("data-target","#deleteConfirmation");
-  buttonEdit.addClass("btn btn-info btn-edit").attr("type","button").attr("data-toggle","modal").attr("data-target","#formProductModal");
+    $("#newprodbutton").click(prodManager.editProduct.bind({isnew: true}));
 
-  $("#newprodbutton").click(editProduct.bind({isnew: true}));
-  $('.WYSIWYG-editor').froalaEditor({
-    toolbarButtons: ['fullscreen', 'bold', 'italic', 'underline', 'strikeThrough', 'subscript', 'superscript', '|', 'fontFamily', 'fontSize', 'color'],
-    pluginsEnabled: null
-  });
+    $('.WYSIWYG-editor').froalaEditor({
+      toolbarButtons: ['fullscreen', 'bold', 'italic', 'underline', 'strikeThrough', 'subscript', 'superscript', '|', 'fontFamily', 'fontSize', 'color'],
+      pluginsEnabled: null
+    });
+  },
+  updateList: function() {
+    $.ajax({
+      url: prodManager.config.apiRestUrl + "/product"
+    })
+    .done(function( data ) {
+      let products = JSON.parse(data).products;
+      prodManager.config.productsList.empty();
+      if(products.length === 0) {
+        prodManager.config.productsList.append($("<li class='product-row list-group-item'>No products were added yet</li>"));
+      }
+      else {
+        $.each(products, function( index, product ) {
+          let productElement = $("<li class='product-row list-group-item' id='prodNr" + product.products_id + "'></li>")
+            .append($("<span class='prod-default-name'>" + product.products_description_name + "</span>"))
+            .append($("<span class='prod-ref'>" + product.products_reference + "</span>"))
+            .append($("<span class='prod-price'>" + product.products_price + "</span>"));
 
-  function deleteProduct() {
+          let deleteButton = prodManager.config.buttonDelete.clone();
+          deleteButton.click(prodManager.deleteProduct.bind(product));
+          productElement.append(deleteButton);
+
+          let editButton = prodManager.config.buttonEdit.clone();
+          editButton.click(prodManager.editProduct.bind(product));
+          productElement.append(editButton);
+
+          prodManager.config.productsList.append(productElement);
+        });
+      }
+    });
+  },
+  deleteProduct: function() {
     const prodId = this.products_id;
     $("#yesDeleteButton").remove();
-    let yesDeleteModal = buttonDeleteModal.clone().attr("id", "yesDeleteButton");
+    let yesDeleteModal = prodManager.config.buttonDeleteModal.clone().attr("id", "yesDeleteButton");
 
     yesDeleteModal.click(function() {
       $.ajax({
         method: "DELETE",
-        url: apiRestUrl + "/product/" + prodId
+        url: prodManager.config.apiRestUrl + "/product/" + prodId
       })
       .done(function(data) {
         $('#deleteConfirmation').modal("hide");
-        updateList();
+        prodManager.updateList();
       });
     });
 
     $("#deleteConfirmation .modal-footer").append(yesDeleteModal)
-  }
-
-  function setProductDescriptions(id) {
+  },
+  cleanUpForm: function() {
+    $("input.form-control").val("");
+    $(".WYSIWYG-editor").froalaEditor('html.set', "");
+  },
+  setProductDescriptions: function(id) {
     $.ajax({
-      url: apiRestUrl + "/productdesc/" + id
+      url: prodManager.config.apiRestUrl + "/productdesc/" + id
     }).done(function(data) {
       const descs = JSON.parse(data).products_description;
       for (var i = descs.length - 1; i >= 0; i--) {
@@ -47,20 +84,14 @@ $(function() {
         descrElement.find(".long-desc").froalaEditor('html.set', descs[i].products_description_description);
       }
     });
-  }
-
-  function cleanUpForm() {
-    $("input.form-control").val("");
-    $(".WYSIWYG-editor").froalaEditor('html.set', "");
-  }
-
-  function editProduct() {
+  },
+  editProduct: function() {
     let binded = this;
     let isUpdate = true;
     let prodId = "";
     let yesSaveProduct;
 
-    cleanUpForm();
+    prodManager.cleanUpForm();
 
     if(binded.isnew) {
       isUpdate = false;
@@ -71,10 +102,10 @@ $(function() {
       $("#editModalLabel").text("Edit Product");
       $("#product-reference").val(binded.products_reference);
       $("#product-price").val(binded.products_price);
-      setProductDescriptions(prodId);
+      prodManager.setProductDescriptions(prodId);
     }
     $("#yesSaveProduct").remove();
-    yesSaveProduct = buttonSaveModal.clone().attr("id", "yesSaveProduct");
+    yesSaveProduct = prodManager.config.buttonSaveModal.clone().attr("id", "yesSaveProduct");
 
     yesSaveProduct.click(function() {
       let validDescriptions = true;
@@ -115,24 +146,24 @@ $(function() {
             productData.products_id = prodId;
             $.ajax({
               type : 'PUT',
-              url: apiRestUrl + "/product",
+              url: prodManager.config.apiRestUrl + "/product",
               contentType : 'application/json',
               data: JSON.stringify(productData),
               success: function(resp) {
                 $('#formProductModal').modal("hide");
-                updateList();
+                prodManager.updateList();
               }
             });
           }
           else {
             $.ajax({
               type : 'POST',
-              url: apiRestUrl + "/product",
+              url: prodManager.config.apiRestUrl + "/product",
               contentType : 'application/json',
               data: JSON.stringify(productData),
               success: function(resp) {
                 $('#formProductModal').modal("hide");
-                updateList();
+                prodManager.updateList();
               }
             });
           }
@@ -144,42 +175,9 @@ $(function() {
       else {
         alert("All fields are required");
       }
-
     });
-
     $("#formProductModal .modal-footer").append(yesSaveProduct)
   }
+};
 
-  function updateList() {
-    $.ajax({
-      url: apiRestUrl + "/product"
-    })
-    .done(function( data ) {
-      let products = JSON.parse(data).products;
-      productsList.empty();
-      if(products.length === 0) {
-        productsList.append($("<li class='product-row list-group-item'>No products were added yet</li>"));
-      }
-      else {
-        $.each(products, function( index, product ) {
-          let productElement = $("<li class='product-row list-group-item' id='prodNr" + product.products_id + "'></li>")
-            .append($("<span class='prod-default-name'>" + product.products_description_name + "</span>"))
-            .append($("<span class='prod-ref'>" + product.products_reference + "</span>"))
-            .append($("<span class='prod-price'>" + product.products_price + "</span>"));
-
-          let deleteButton = buttonDelete.clone();
-          deleteButton.click(deleteProduct.bind(product));
-          productElement.append(deleteButton);
-
-          let editButton = buttonEdit.clone();
-          editButton.click(editProduct.bind(product));
-          productElement.append(editButton);
-
-          productsList.append(productElement);
-        });
-      }
-    });
-  }
-
-  updateList();
-});
+$(prodManager.init);
