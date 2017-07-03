@@ -11,4 +11,6 @@ Track your products in different languages
 
 4) Clone this repository inside the vhost's folder
 
-5) go to products:8080 to start working
+5) Go to config.php file and set credentials values for your previously created MySQL DB.
+
+6) go to products:8080 to start working
