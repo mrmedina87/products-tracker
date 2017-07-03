@@ -3,7 +3,7 @@
   include_once 'resource.php';
 
   class Product extends Resource {
-    private $default_language_id = 1;
+
     function __construct($method, $payload) {
       parent::__construct($method, $payload);
     }
@@ -177,7 +177,7 @@
       switch($this->method) {
         case "GET":
           if(isset($request[2])) {
-            $query = "select * from products where products_id = ?";
+            $query = "SELECT * FROM products WHERE products_id = ?";
             $stmt = $this->link->prepare($query);
             $stmt->bind_param("i", $request[2]);
             $stmt->execute();
@@ -193,7 +193,8 @@
                       ON products.products_id=products_description.products_id 
                       WHERE products_description.languages_id = ? ORDER BY products.products_id ASC";
             $stmt = $this->link->prepare($query);
-            $stmt->bind_param("i", $this->default_language_id);
+            $default_language_id = intval(DEFAULT_LANGUAGE_ID);
+            $stmt->bind_param("i", $default_language_id);
             $stmt->execute();
             $result = $stmt->get_result();
           }
@@ -210,10 +211,10 @@
           break;
         case "DELETE":
           if($request[2] != "") {
-            $delete = "delete from products where products_id = ?";
+            $delete = "DELETE FROM products WHERE products_id = ?";
             $stmt = $this->link->prepare($delete);
             if($stmt->bind_param("i", $request[2]) && $stmt->execute()) {
-              $delete = "delete from products_description where products_id = ?";
+              $delete = "DELETE FROM products_description WHERE products_id = ?";
               $stmt = $this->link->prepare($delete);
               if($stmt->bind_param("i", $request[2]) && $stmt->execute()) {
                 echo '{"deleted": "true"}';

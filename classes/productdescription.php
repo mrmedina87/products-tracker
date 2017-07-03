@@ -27,17 +27,19 @@
           }
           if($result) {
             echo '{"products_description":[';
-            for ($i = 0; $i < mysqli_num_rows($result); $i++) {
-              echo ($i>0?',':'').json_encode(mysqli_fetch_object($result));
+            for ($i = 0; $i < $result->num_rows; $i++) {
+              echo ($i>0?',':'').json_encode($result->fetch_object());
             }
             echo ']}';
           }
           else {
-            http_response_code(400);  
+            http_response_code(400);
+            exit();
           }
           break;
         default:
           http_response_code(404);
+          exit();
           break;
       }
     }

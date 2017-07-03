@@ -11,7 +11,8 @@ $request = explode('/', trim($_SERVER['REQUEST_URI'], '/'));
 $input = json_decode(file_get_contents('php://input'), true);
 
 if($request[0] === "") {
-  showMain();
+  $main = new Main();
+  $main->showMain();
 }
 else {
   if($request[0] === "api") {

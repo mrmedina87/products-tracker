@@ -1,4 +1,5 @@
 var prodManager = {
+  
   init: function() {
     prodManager.config = {
       productsList: $("ul.products-list"),
@@ -19,6 +20,7 @@ var prodManager = {
       pluginsEnabled: null
     });
   },
+
   updateList: function() {
     $.ajax({
       url: prodManager.config.apiRestUrl + "/product"
@@ -49,6 +51,7 @@ var prodManager = {
       }
     });
   },
+
   deleteProduct: function() {
     const prodId = this.products_id;
     $("#yesDeleteButton").remove();
@@ -67,10 +70,12 @@ var prodManager = {
 
     $("#deleteConfirmation .modal-footer").append(yesDeleteModal)
   },
+
   cleanUpForm: function() {
     $("input.form-control").val("");
     $(".WYSIWYG-editor").froalaEditor('html.set', "");
   },
+
   setProductDescriptions: function(id) {
     $.ajax({
       url: prodManager.config.apiRestUrl + "/productdesc/" + id
@@ -85,6 +90,7 @@ var prodManager = {
       }
     });
   },
+
   editProduct: function() {
     let binded = this;
     let isUpdate = true;
